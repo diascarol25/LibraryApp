@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { View, FlatList, Image } from "react-native";
 import { Searchbar, Card, Text, ActivityIndicator } from "react-native-paper";
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const [query, setQuery] = useState("harry potter");
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -27,7 +27,10 @@ export default function HomeScreen() {
   }, []);
 
   const renderBook = ({ item }) => (
-    <Card style={{ marginBottom: 10 }}>
+   <Card
+  style={{ marginBottom: 10 }}
+  onPress={() => navigation.navigate("Details", { book: item })}
+>
       <View style={{ flexDirection: "row", padding: 10 }}>
         {item.cover_i ? (
           <Image
