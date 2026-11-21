@@ -4,6 +4,7 @@ import { Text, Button } from "react-native-paper";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebaseConfig";
 
+
 export default function DetailsScreen({ route }) {
   const { book } = route.params;
   const [loading, setLoading] = useState(false);
