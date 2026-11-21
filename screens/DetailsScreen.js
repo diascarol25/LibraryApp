@@ -1,8 +1,51 @@
-import { View, Image, ScrollView } from "react-native";
-import { Text } from "react-native-paper";
+import { useState } from "react";
+import { View, Image, ScrollView, Alert } from "react-native";
+import { Text, Button } from "react-native-paper";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db } from "../firebaseConfig";
 
 export default function DetailsScreen({ route }) {
   const { book } = route.params;
+  const [loading, setLoading] = useState(false);
+
+  const handleBorrow = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert("Not logged in", "Please login again.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const bookId = book.key.replace("/works/", "");
+      const ref = doc(db, "borrowed", `${user.uid}_${bookId}`);
+
+      const existing = await getDoc(ref);
+      if (existing.exists()) {
+        Alert.alert("Already borrowed", "You have already borrowed this book.");
+        setLoading(false);
+        return;
+      }
+
+      const borrowDate = new Date();
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 14);
+
+      await setDoc(ref, {
+        userId: user.uid,
+        bookId: bookId,
+        title: book.title,
+        author: book.author_name ? book.author_name[0] : "Unknown author",
+        coverId: book.cover_i || null,
+        borrowDate: borrowDate,
+        dueDate: dueDate,
+      });
+
+      Alert.alert("Borrowed!", `Due date: ${dueDate.toDateString()}`);
+    } catch (error) {
+      Alert.alert("Borrow failed", error.message);
+    }
+    setLoading(false);
+  };
 
   return (
     <ScrollView contentContainerStyle={{ padding: 20, alignItems: "center" }}>
@@ -38,6 +81,15 @@ export default function DetailsScreen({ route }) {
       <Text style={{ marginTop: 6 }}>
         {book.number_of_pages_median ? `Pages: ${book.number_of_pages_median}` : ""}
       </Text>
+
+      <Button
+        mode="contained"
+        onPress={handleBorrow}
+        loading={loading}
+        style={{ marginTop: 24, alignSelf: "stretch" }}
+      >
+        Borrow this book
+      </Button>
     </ScrollView>
   );
 }
